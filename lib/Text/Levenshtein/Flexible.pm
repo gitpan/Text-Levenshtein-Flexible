@@ -1,12 +1,11 @@
 package Text::Levenshtein::Flexible;
 
-use 5.014002;
+use 5.008008;
 use strict;
 use warnings;
 use Carp;
 
 require Exporter;
-use AutoLoader;
 
 our @ISA = qw(Exporter);
 
@@ -25,30 +24,7 @@ our %EXPORT_TAGS = (
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
-our $VERSION = '0.03';
-
-sub AUTOLOAD {
-    # This AUTOLOAD is used to 'autoload' constants from the constant()
-    # XS function.
-
-    my $constname;
-    our $AUTOLOAD;
-    ($constname = $AUTOLOAD) =~ s/.*:://;
-    croak "&Text::Levenshtein::Flexible::constant not defined" if $constname eq 'constant';
-    my ($error, $val) = constant($constname);
-    if ($error) { croak $error; }
-    {
-	no strict 'refs';
-	# Fixed between 5.005_53 and 5.005_61
-#XXX	if ($] >= 5.00561) {
-#XXX	    *$AUTOLOAD = sub () { $val };
-#XXX	}
-#XXX	else {
-	    *$AUTOLOAD = sub { $val };
-#XXX	}
-    }
-    goto &$AUTOLOAD;
-}
+our $VERSION = '0.04';
 
 require XSLoader;
 XSLoader::load('Text::Levenshtein::Flexible', $VERSION);
@@ -199,7 +175,7 @@ string-distance pairs. To get a list of strings sorted by distance:
     sort { $a->[1] <=> $b->[1] }
     levenshtein_l_all(2, "bar", "foo", "blah", "baz");
 
-=head2 levenshtein_lc_all($max_distance, $cost_ins, $cost_del, $cost_sub, $src, @dst)
+=head3 levenshtein_lc_all($max_distance, $cost_ins, $cost_del, $cost_sub, $src, @dst)
 
 For an array C<@dst> of strings, return all that are up to C<$max_distance>
 from C<$src> when using the specified costs as in levenshtein_c. The result is
