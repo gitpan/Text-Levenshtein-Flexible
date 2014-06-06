@@ -35,7 +35,7 @@ static int levenshtein_internal(
       int ins_c, int del_c, int sub_c);
 #endif
 
-#define MAX_LEVENSHTEIN_STRLEN		255
+#define MAX_LEVENSHTEIN_STRLEN	16384
 
 #define Min(x, y) ((x) < (y) ? (x) : (y))
 /*
@@ -397,7 +397,9 @@ levenshtein_internal(
 	 * current row, that's where we'll find it.
 	 */
 	result = prev[m - 1];
+#ifdef LEVENSHTEIN_LESS_EQUAL
 free_return:
+#endif
    if(s_char_len)
       Safefree(s_char_len);
    if(prev)

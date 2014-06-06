@@ -81,7 +81,6 @@ levenshtein_l(src, dst, max)
       STRLEN src_bytes, src_chars, dst_bytes, dst_chars;
       const char *src_c, *dst_c;
       const unsigned int max_dist = SvUV(max);
-      unsigned int result;
    CODE:
       SETUP_SRC_DST;
       CALCULATE_CHAR_LENGTHS(src, dst, src_bytes, dst_bytes, src_chars, dst_chars);
@@ -107,7 +106,6 @@ levenshtein_lc(src, dst, max, cost_ins, cost_del, cost_sub)
       STRLEN src_bytes, src_chars, dst_bytes, dst_chars;
       const char *src_c, *dst_c;
       const unsigned int max_dist = SvUV(max);
-      unsigned int result;
    CODE:
       SETUP_SRC_DST;
       CALCULATE_CHAR_LENGTHS(src, dst, src_bytes, dst_bytes, src_chars, dst_chars);
@@ -185,7 +183,6 @@ distance_l(self, src, dst)
    INIT:
       STRLEN src_bytes, src_chars, dst_bytes, dst_chars;
       const char *src_c, *dst_c;
-      unsigned int result;
    CODE:
       SETUP_SRC_DST;
       CALCULATE_CHAR_LENGTHS(src, dst, src_bytes, dst_bytes, src_chars, dst_chars);
@@ -206,7 +203,6 @@ distance_lc(self, src, dst)
    INIT:
       STRLEN src_bytes, src_chars, dst_bytes, dst_chars;
       const char *src_c, *dst_c;
-      unsigned int result;
    CODE:
       SETUP_SRC_DST;
       CALCULATE_CHAR_LENGTHS(src, dst, src_bytes, dst_bytes, src_chars, dst_chars);
@@ -219,3 +215,65 @@ distance_lc(self, src, dst)
    OUTPUT:
       RETVAL
 
+void
+distance_l_all(self, src, ...)
+   Text::Levenshtein::Flexible self
+	SV * src
+   PROTOTYPE: DISABLE
+   INIT:
+      STRLEN src_bytes, src_chars, dst_bytes, dst_chars;
+      const char *src_c, *dst_c;
+      unsigned int dist, dst_count;
+      SV *dst;
+      SV *tmp_result[2];
+      AV *result;
+   PPCODE:
+      src_c = SvPV(src, src_bytes);
+      src_chars = sv_len_utf8(src);
+      for(dst_count=2; dst_count < items; ++dst_count) {
+         dst = ST(dst_count);
+         dst_c = SvPV(dst, dst_bytes);
+         dst_chars = sv_len_utf8(dst);
+	      dist = levenshtein_less_equal_internal(
+           src_c, dst_c, src_bytes, dst_bytes, src_chars, dst_chars,
+           1, 1, 1, self->max
+         );
+         if(dist <= self->max) {
+            tmp_result[0] = dst;
+            tmp_result[1] = sv_2mortal(newSVuv(dist));
+            result = av_make(2, tmp_result);
+            XPUSHs(sv_2mortal(newRV_noinc((SV*)result)));
+         }
+      }
+
+void
+distance_lc_all(self, src, ...)
+   Text::Levenshtein::Flexible self
+	SV * src
+   PROTOTYPE: DISABLE
+   INIT:
+      STRLEN src_bytes, src_chars, dst_bytes, dst_chars;
+      const char *src_c, *dst_c;
+      unsigned int dist, dst_count;
+      SV *dst;
+      SV *tmp_result[2];
+      AV *result;
+   PPCODE:
+      src_c = SvPV(src, src_bytes);
+      src_chars = sv_len_utf8(src);
+      for(dst_count=2; dst_count < items; ++dst_count) {
+         dst = ST(dst_count);
+         dst_c = SvPV(dst, dst_bytes);
+         dst_chars = sv_len_utf8(dst);
+	      dist = levenshtein_less_equal_internal(
+           src_c, dst_c, src_bytes, dst_bytes, src_chars, dst_chars,
+           self->cost_ins, self->cost_del, self->cost_sub,
+           self->max
+         );
+         if(dist <= self->max) {
+            tmp_result[0] = dst;
+            tmp_result[1] = sv_2mortal(newSVuv(dist));
+            result = av_make(2, tmp_result);
+            XPUSHs(sv_2mortal(newRV_noinc((SV*)result)));
+         }
+      }
